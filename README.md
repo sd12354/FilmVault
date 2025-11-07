@@ -19,9 +19,13 @@ FilmVault helps movie collectors digitize and organize their physical DVD librar
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** React, Context API
-- **Backend:** Firebase (Firestore, Auth, Hosting)
-- **APIs:** TMDB (The Movie Database)
+- **Frontend:** React 18 + TypeScript + Vite
+- **UI Framework:** Tailwind CSS + shadcn/ui components
+- **State Management:** Zustand + React Query
+- **Backend:** Firebase (Firestore, Auth, Storage, Hosting)
+- **APIs:** TMDB (The Movie Database) for movie metadata
+- **Barcode Scanning:** ZXing library
+- **PWA:** Vite PWA plugin with Workbox
 - **Authentication:** Firebase Auth (Google OAuth, Email/Password)
 - **Deployment:** Firebase Hosting
 
@@ -49,40 +53,46 @@ npm install
 cp .env.example .env
 
 # Start development server
-npm start
+npm run dev
 ```
 
 ### Environment Variables
 
-Create a `.env` file in the root directory:
+Create a `.env` file in the root directory (copy from `.env.example`):
 
 ```
-REACT_APP_FIREBASE_API_KEY=your_firebase_api_key
-REACT_APP_FIREBASE_AUTH_DOMAIN=your_auth_domain
-REACT_APP_FIREBASE_PROJECT_ID=your_project_id
-REACT_APP_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-REACT_APP_FIREBASE_APP_ID=your_app_id
-REACT_APP_TMDB_API_KEY=your_tmdb_api_key
+VITE_FIREBASE_API_KEY=your_firebase_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+VITE_TMDB_API_KEY=your_tmdb_api_key
 ```
+
+**Note:** Vite uses `VITE_` prefix for environment variables (not `REACT_APP_`).
+
+See [SETUP.md](./SETUP.md) for detailed setup instructions.
 
 ## 📖 Documentation
 
-- [Requirements Document](./docs/REQUIREMENTS.md)
-- [API Documentation](./docs/API.md)
-- [Contributing Guidelines](./CONTRIBUTING.md)
+- [Setup Guide](./SETUP.md) - Detailed setup and deployment instructions
+- [Product Requirements Document](./PRD.md) - Full PRD (see user query for details)
 
-## 🧪 Testing
+## 🧪 Development
 
 ```bash
-# Run unit tests
-npm test
+# Start development server
+npm run dev
 
-# Run e2e tests
-npm run test:e2e
+# Build for production
+npm run build
 
-# Run test coverage
-npm run test:coverage
+# Preview production build
+npm run preview
+
+# Lint code
+npm run lint
 ```
 
 ## 📱 Features
@@ -105,16 +115,18 @@ npm run test:coverage
 - Real-time updates across all members
 - Activity feed for shared collections
 
-## 🗺️ Roadmap
+## 🗺️ Roadmap (v2+)
 
-- [ ] Core MVP features
-- [ ] Mobile app (React Native)
-- [ ] Wishlist feature
+- [x] Core MVP features
+- [ ] Export to CSV/JSON (UI ready, backend pending)
+- [ ] Invite system (UI ready, backend pending)
+- [ ] Activity log
+- [ ] Advanced filtering and sorting
+- [ ] Drag-and-drop ranking
+- [ ] Public share links
+- [ ] Bulk import
 - [ ] Lending tracker
-- [ ] Export to CSV/PDF
-- [ ] Import from file
-- [ ] Public profile pages
-- [ ] Streaming availability integration
+- [ ] Mobile app (React Native/Capacitor)
 
 ## 🤝 Contributing
 
