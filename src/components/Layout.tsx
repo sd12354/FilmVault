@@ -37,8 +37,8 @@ export default function Layout({ children }: LayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <nav className="border-b">
+    <div className="min-h-screen flex flex-col bg-background">
+      <nav className="border-b bg-background shrink-0">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/library" className="flex items-center gap-2 text-xl font-bold">
             <Film className="h-6 w-6" />
@@ -88,7 +88,7 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </div>
       </nav>
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 layout-main-fill min-h-0">{children}</main>
       <Footer />
     </div>
   )

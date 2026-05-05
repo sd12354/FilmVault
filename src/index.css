@@ -366,5 +366,26 @@
   .page-enter {
     animation: fadeInUp 0.4s ease-out;
   }
+
+  /* Main column between nav and footer: theme-colored wash using design tokens */
+  .layout-main-fill {
+    background-image: linear-gradient(
+      165deg,
+      hsl(var(--primary) / 0.2) 0%,
+      hsl(var(--accent) / 0.12) 32%,
+      hsl(var(--muted) / 0.35) 58%,
+      hsl(var(--background)) 100%
+    );
+  }
+
+  .dark .layout-main-fill {
+    background-image: linear-gradient(
+      165deg,
+      hsl(var(--primary) / 0.22) 0%,
+      hsl(var(--accent) / 0.1) 30%,
+      hsl(var(--muted) / 0.5) 55%,
+      hsl(var(--background)) 100%
+    );
+  }
 }
 
