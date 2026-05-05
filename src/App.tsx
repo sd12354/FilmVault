@@ -59,7 +59,7 @@ function AuthHandler() {
 }
 
 function App() {
-  const { setFirebaseUser, setLoading } = useAuthStore()
+  const { setFirebaseUser, setLoading, setUser } = useAuthStore()
   const { fetchUser } = useUser()
 
   useEffect(() => {
@@ -84,6 +84,15 @@ function App() {
       async (firebaseUser) => {
         setFirebaseUser(firebaseUser)
         if (firebaseUser) {
+          // Set a base user immediately so auth navigation is consistent even
+          // when Firestore profile reads fail (rules/index/network).
+          setUser({
+            uid: firebaseUser.uid,
+            displayName: firebaseUser.displayName,
+            email: firebaseUser.email,
+            photoURL: firebaseUser.photoURL,
+            createdAt: new Date(),
+          })
           try {
             await fetchUser(firebaseUser.uid)
           } catch (error) {

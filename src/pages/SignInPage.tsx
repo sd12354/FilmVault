@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, GoogleAuthProvider } from 'firebase/auth'
+import { signInWithEmailAndPassword, signInWithRedirect, signInWithPopup, GoogleAuthProvider } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,6 +16,7 @@ export default function SignInPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { theme, toggleTheme } = useTheme()
+  const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,10 +37,15 @@ export default function SignInPage() {
       let errorMessage = 'Failed to sign in'
       if (err.code === 'auth/user-not-found') {
         errorMessage = 'No account found with this email. Please sign up first.'
-      } else if (err.code === 'auth/wrong-password') {
-        errorMessage = 'Incorrect password. Please try again.'
+      } else if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        errorMessage = 'Incorrect email or password.'
       } else if (err.code === 'auth/invalid-email') {
         errorMessage = 'Invalid email address.'
+      } else if (err.code === 'auth/operation-not-allowed') {
+        errorMessage =
+          'Email/password sign-in is turned off in Firebase. In Firebase Console → Authentication → Sign-in method, enable Email/Password.'
+      } else if (err.code === 'auth/too-many-requests') {
+        errorMessage = 'Too many attempts. Try again later.'
       } else if (err.message) {
         errorMessage = err.message
       }
@@ -60,38 +66,16 @@ export default function SignInPage() {
 
     try {
       const provider = new GoogleAuthProvider()
-      // Try popup first, fall back to redirect if popup is blocked
-      try {
+      if (isLocalDev) {
+        // In local dev, popup keeps auth return on localhost and avoids landing on firebaseapp.com.
         await signInWithPopup(auth, provider)
-        // Sign-in successful - reset loading state
-        // The auth state change handler will handle navigation
-        setLoading(false)
-      } catch (popupError: any) {
-        // If popup is blocked or fails due to COOP, use redirect
-        if (
-          popupError.code === 'auth/popup-blocked' ||
-          popupError.code === 'auth/popup-closed-by-user' ||
-          popupError.message?.includes('Cross-Origin-Opener-Policy')
-        ) {
-          // Use redirect as fallback
-          await signInWithRedirect(auth, provider)
-          // Note: signInWithRedirect will navigate away, so we don't need to handle the result here
-          // But reset loading in case redirect doesn't happen immediately
-          setTimeout(() => {
-            setLoading(false)
-          }, 1000)
-          return
-        }
-        throw popupError
-      }
-    } catch (err: any) {
-      if (err.code === 'auth/popup-closed-by-user') {
-        // User closed popup - not really an error
         setLoading(false)
       } else {
-        setError(err.message || 'Failed to sign in with Google')
-        setLoading(false)
+        await signInWithRedirect(auth, provider)
       }
+    } catch (err: any) {
+      setError(err.message || 'Failed to sign in with Google')
+      setLoading(false)
     }
   }
 

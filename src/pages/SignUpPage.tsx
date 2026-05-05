@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { createUserWithEmailAndPassword, signInWithPopup, signInWithRedirect, GoogleAuthProvider } from 'firebase/auth'
+import { createUserWithEmailAndPassword, signInWithRedirect, signInWithPopup, GoogleAuthProvider } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -45,6 +45,7 @@ export default function SignUpPage() {
   const [passwordErrors, setPasswordErrors] = useState<string[]>([])
   const [showPasswordRequirements, setShowPasswordRequirements] = useState(false)
   const { theme, toggleTheme } = useTheme()
+  const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
 
   const handlePasswordChange = (value: string) => {
     setPassword(value)
@@ -90,6 +91,9 @@ export default function SignUpPage() {
         errorMessage = 'Invalid email address.'
       } else if (err.code === 'auth/weak-password') {
         errorMessage = 'Password is too weak. Please use a stronger password.'
+      } else if (err.code === 'auth/operation-not-allowed') {
+        errorMessage =
+          'Email/password sign-up is turned off in Firebase. In Firebase Console → Authentication → Sign-in method, enable Email/Password.'
       } else if (err.message) {
         errorMessage = err.message
       }
@@ -110,38 +114,15 @@ export default function SignUpPage() {
 
     try {
       const provider = new GoogleAuthProvider()
-      // Try popup first, fall back to redirect if popup is blocked
-      try {
+      if (isLocalDev) {
         await signInWithPopup(auth, provider)
-        // Sign-in successful - reset loading state
-        // The auth state change handler will handle navigation
-        setLoading(false)
-      } catch (popupError: any) {
-        // If popup is blocked or fails due to COOP, use redirect
-        if (
-          popupError.code === 'auth/popup-blocked' ||
-          popupError.code === 'auth/popup-closed-by-user' ||
-          popupError.message?.includes('Cross-Origin-Opener-Policy')
-        ) {
-          // Use redirect as fallback
-          await signInWithRedirect(auth, provider)
-          // Note: signInWithRedirect will navigate away, so we don't need to handle the result here
-          // But reset loading in case redirect doesn't happen immediately
-          setTimeout(() => {
-            setLoading(false)
-          }, 1000)
-          return
-        }
-        throw popupError
-      }
-    } catch (err: any) {
-      if (err.code === 'auth/popup-closed-by-user') {
-        // User closed popup - not really an error
         setLoading(false)
       } else {
-        setError(err.message || 'Failed to sign up with Google')
-        setLoading(false)
+        await signInWithRedirect(auth, provider)
       }
+    } catch (err: any) {
+      setError(err.message || 'Failed to sign up with Google')
+      setLoading(false)
     }
   }
 
