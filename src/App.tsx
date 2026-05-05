@@ -38,8 +38,12 @@ function AuthHandler() {
 
   useEffect(() => {
     if (!loading && user) {
-      // If user is authenticated and on auth pages, redirect to library
-      if (location.pathname === '/signin' || location.pathname === '/signup') {
+      // If user is authenticated and on auth pages or landing, go to library
+      if (
+        location.pathname === '/signin' ||
+        location.pathname === '/signup' ||
+        location.pathname === '/'
+      ) {
         navigate('/library', { replace: true })
       }
     } else if (!loading && !user) {

@@ -4,13 +4,18 @@ import { useAuthStore } from '@/store/authStore'
 import type { User } from '@/types'
 
 export function useUser() {
-  const { firebaseUser, setUser } = useAuthStore()
+  const { setUser } = useAuthStore()
 
   const fetchUser = async (uid: string) => {
     if (!db) {
       console.warn('Firestore not initialized')
       return
     }
+
+    // Always read fresh auth user from the store. App's auth listener calls
+    // setFirebaseUser before fetchUser, but fetchUser must not rely on a hook
+    // closure from the first render (it would stay null for new Google users).
+    const firebaseUser = useAuthStore.getState().firebaseUser
 
     try {
       const userDoc = await getDoc(doc(db, 'users', uid))
@@ -24,7 +29,7 @@ export function useUser() {
           createdAt: data.createdAt?.toDate() || new Date(),
           defaultCollectionId: data.defaultCollectionId,
         })
-      } else if (firebaseUser) {
+      } else if (firebaseUser && firebaseUser.uid === uid) {
         // Create user document if it doesn't exist
         try {
           const newUser: Omit<User, 'uid'> = {
