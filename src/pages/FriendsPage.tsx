@@ -43,7 +43,7 @@ export default function FriendsPage() {
   const { data: friends, isLoading: friendsLoading, error: friendsError } = useFriends()
   const { data: friendRequests, isLoading: requestsLoading } = useFriendRequests()
   const { data: sentRequests, isLoading: sentRequestsLoading } = useSentFriendRequests()
-  const { data: messages, isLoading: messagesLoading } = useMessages()
+  const { data: messages, isLoading: messagesLoading, error: messagesError } = useMessages()
   const sendRequest = useSendFriendRequest()
   const acceptRequest = useAcceptFriendRequest()
   const rejectRequest = useRejectFriendRequest()
@@ -416,6 +416,15 @@ export default function FriendsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {messagesError && (
+              <div className="mb-4 p-3 text-sm text-destructive bg-destructive/10 rounded-md flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <div>
+                  <div className="font-medium">Could not load messages</div>
+                  <div className="text-xs mt-1">{(messagesError as Error)?.message || 'Unknown error'}</div>
+                </div>
+              </div>
+            )}
             {messagesLoading ? (
               <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
                 <Loader2 className="h-8 w-8 animate-spin mb-2" />
@@ -425,6 +434,7 @@ export default function FriendsPage() {
               <div className="space-y-3">
                 {messages.map((message) => {
                     const isExpanded = expandedMessageId === message.id
+                    const movieList = message.movies ?? []
                     return (
                       <div
                         key={message.id}
@@ -459,7 +469,7 @@ export default function FriendsPage() {
                                   )}
                                 </div>
                                 <div className="text-sm text-muted-foreground mb-1">
-                                  Sent {message.movies.length} movie{message.movies.length !== 1 ? 's' : ''}
+                                  Sent {movieList.length} movie{movieList.length !== 1 ? 's' : ''}
                                 </div>
                                 {message.message && (
                                   <div className="text-sm text-muted-foreground line-clamp-1">
@@ -483,10 +493,10 @@ export default function FriendsPage() {
                             )}
                             <div className="mb-4">
                               <h4 className="text-sm font-semibold mb-3">
-                                Movies ({message.movies.length})
+                                Movies ({movieList.length})
                               </h4>
                               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                                {message.movies.map((movie, index) => (
+                                {movieList.map((movie, index) => (
                                   <div
                                     key={index}
                                     className="group relative rounded-lg overflow-hidden bg-card border hover:shadow-md transition-shadow"

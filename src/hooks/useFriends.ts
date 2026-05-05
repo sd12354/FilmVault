@@ -145,6 +145,57 @@ export function useFriends() {
   })
 }
 
+async function fetchPendingIncomingRequests(userUid: string) {
+  if (!db) throw new Error('Firestore not initialized')
+
+  let requestsSnapshot
+  try {
+    requestsSnapshot = await getDocs(
+      query(
+        collection(db, 'friendships'),
+        where('recipientUid', '==', userUid),
+        where('status', '==', 'pending')
+      )
+    )
+  } catch (error: any) {
+    if (error.code === 'failed-precondition' || error.message?.includes('index')) {
+      const snap = await getDocs(
+        query(collection(db, 'friendships'), where('recipientUid', '==', userUid))
+      )
+      requestsSnapshot = {
+        docs: snap.docs.filter((d) => d.data().status === 'pending'),
+      } as typeof snap
+    } else {
+      throw error
+    }
+  }
+
+  const requests = await Promise.all(
+    requestsSnapshot.docs.map(async (docSnap) => {
+      const data = docSnap.data()
+      const requesterUid = data.requesterUid
+
+      if (!db) throw new Error('Firestore not initialized')
+      const requesterDoc = await getDoc(doc(db, 'users', requesterUid))
+      if (!requesterDoc.exists()) return null
+
+      const requesterData = requesterDoc.data()
+      return {
+        id: docSnap.id,
+        requester: {
+          uid: requesterUid,
+          displayName: requesterData.displayName,
+          email: requesterData.email,
+          photoURL: requesterData.photoURL,
+        } as Partial<User>,
+        createdAt: data.createdAt?.toDate() || new Date(),
+      }
+    })
+  )
+
+  return requests.filter((r) => r !== null)
+}
+
 export function useFriendRequests() {
   const { user } = useAuthStore()
 
@@ -152,44 +203,61 @@ export function useFriendRequests() {
     queryKey: ['friend-requests', user?.uid],
     queryFn: async () => {
       if (!user) throw new Error('Not authenticated')
-      if (!db) throw new Error('Firestore not initialized')
-
-      // Get pending requests where current user is the recipient
-      const requestsSnapshot = await getDocs(
-        query(
-          collection(db, 'friendships'),
-          where('recipientUid', '==', user.uid),
-          where('status', '==', 'pending')
-        )
-      )
-
-      const requests = await Promise.all(
-        requestsSnapshot.docs.map(async (docSnap) => {
-          const data = docSnap.data()
-          const requesterUid = data.requesterUid
-
-          if (!db) throw new Error('Firestore not initialized')
-          const requesterDoc = await getDoc(doc(db, 'users', requesterUid))
-          if (!requesterDoc.exists()) return null
-
-          const requesterData = requesterDoc.data()
-          return {
-            id: docSnap.id,
-            requester: {
-              uid: requesterUid,
-              displayName: requesterData.displayName,
-              email: requesterData.email,
-              photoURL: requesterData.photoURL,
-            } as Partial<User>,
-            createdAt: data.createdAt?.toDate() || new Date(),
-          }
-        })
-      )
-
-      return requests.filter((r) => r !== null)
+      return fetchPendingIncomingRequests(user.uid)
     },
     enabled: !!user,
   })
+}
+
+async function fetchPendingOutgoingRequests(userUid: string) {
+  if (!db) throw new Error('Firestore not initialized')
+
+  let requestsSnapshot
+  try {
+    requestsSnapshot = await getDocs(
+      query(
+        collection(db, 'friendships'),
+        where('requesterUid', '==', userUid),
+        where('status', '==', 'pending')
+      )
+    )
+  } catch (error: any) {
+    if (error.code === 'failed-precondition' || error.message?.includes('index')) {
+      const snap = await getDocs(
+        query(collection(db, 'friendships'), where('requesterUid', '==', userUid))
+      )
+      requestsSnapshot = {
+        docs: snap.docs.filter((d) => d.data().status === 'pending'),
+      } as typeof snap
+    } else {
+      throw error
+    }
+  }
+
+  const requests = await Promise.all(
+    requestsSnapshot.docs.map(async (docSnap) => {
+      const data = docSnap.data()
+      const recipientUid = data.recipientUid
+
+      if (!db) throw new Error('Firestore not initialized')
+      const recipientDoc = await getDoc(doc(db, 'users', recipientUid))
+      if (!recipientDoc.exists()) return null
+
+      const recipientData = recipientDoc.data()
+      return {
+        id: docSnap.id,
+        recipient: {
+          uid: recipientUid,
+          displayName: recipientData.displayName,
+          email: recipientData.email,
+          photoURL: recipientData.photoURL,
+        } as Partial<User>,
+        createdAt: data.createdAt?.toDate() || new Date(),
+      }
+    })
+  )
+
+  return requests.filter((r) => r !== null)
 }
 
 export function useSentFriendRequests() {
@@ -199,41 +267,7 @@ export function useSentFriendRequests() {
     queryKey: ['sent-friend-requests', user?.uid],
     queryFn: async () => {
       if (!user) throw new Error('Not authenticated')
-      if (!db) throw new Error('Firestore not initialized')
-
-      // Get pending requests where current user is the requester
-      const requestsSnapshot = await getDocs(
-        query(
-          collection(db, 'friendships'),
-          where('requesterUid', '==', user.uid),
-          where('status', '==', 'pending')
-        )
-      )
-
-      const requests = await Promise.all(
-        requestsSnapshot.docs.map(async (docSnap) => {
-          const data = docSnap.data()
-          const recipientUid = data.recipientUid
-
-          if (!db) throw new Error('Firestore not initialized')
-          const recipientDoc = await getDoc(doc(db, 'users', recipientUid))
-          if (!recipientDoc.exists()) return null
-
-          const recipientData = recipientDoc.data()
-          return {
-            id: docSnap.id,
-            recipient: {
-              uid: recipientUid,
-              displayName: recipientData.displayName,
-              email: recipientData.email,
-              photoURL: recipientData.photoURL,
-            } as Partial<User>,
-            createdAt: data.createdAt?.toDate() || new Date(),
-          }
-        })
-      )
-
-      return requests.filter((r) => r !== null)
+      return fetchPendingOutgoingRequests(user.uid)
     },
     enabled: !!user,
   })

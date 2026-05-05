@@ -113,6 +113,7 @@ export function useMessages() {
           return {
             id: docSnap.id,
             ...data,
+            movies: Array.isArray(data.movies) ? data.movies : [],
             createdAt: (data.createdAt as Timestamp)?.toDate() || new Date(),
           } as MovieMessage
         })
@@ -132,6 +133,7 @@ export function useMessages() {
             return {
               id: docSnap.id,
               ...data,
+              movies: Array.isArray(data.movies) ? data.movies : [],
               createdAt: (data.createdAt as Timestamp)?.toDate() || new Date(),
             } as MovieMessage
           })

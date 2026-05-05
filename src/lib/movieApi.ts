@@ -6,6 +6,7 @@ const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p'
 
 export function getPosterUrl(path: string | undefined, size: 'w154' | 'w342' | 'w500' | 'w780' = 'w500'): string {
   if (!path) return '/placeholder-poster.png'
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
   return `${TMDB_IMAGE_BASE}/${size}${path}`
 }
 
