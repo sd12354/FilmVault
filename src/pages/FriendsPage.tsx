@@ -31,7 +31,6 @@ import {
   Film,
   Tv,
   Calendar,
-  Star,
 } from 'lucide-react'
 
 export default function FriendsPage() {
@@ -641,7 +640,7 @@ export default function FriendsPage() {
                           onClick={() => {
                             setSendMoviesModal({
                               uid: friend.uid,
-                              name: friend.displayName,
+                              name: friend.displayName ?? undefined,
                             })
                           }}
                           title="Send movies"

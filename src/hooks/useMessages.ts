@@ -13,7 +13,6 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuthStore } from '@/store/authStore'
-import type { MovieItem } from '@/types'
 
 export interface MovieMessage {
   id: string

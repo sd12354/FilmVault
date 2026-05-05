@@ -7,11 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Input } from './ui/input'
 import { X, Film, Tv, Check, Loader2 } from 'lucide-react'
 import { getPosterUrl } from '@/lib/movieApi'
-import type { MovieItem } from '@/types'
 
 interface SendMoviesModalProps {
   recipientUid: string
-  recipientName?: string
+  recipientName?: string | null
   isOpen: boolean
   onClose: () => void
 }
