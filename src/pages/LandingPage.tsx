@@ -1,14 +1,27 @@
 import { Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useTheme } from '@/components/ThemeProvider'
 import { Film, Scan, Share2, Star, ChevronRight, Moon, Sun } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import Footer from '@/components/Footer'
+import { getPopularMovies, getPosterUrl } from '@/lib/movieApi'
+
+const TMDB_READY =
+  Boolean(import.meta.env.VITE_TMDB_API_KEY) &&
+  import.meta.env.VITE_TMDB_API_KEY !== 'your_tmdb_api_key'
 
 export default function LandingPage() {
   const { user } = useAuthStore()
   const { theme, toggleTheme } = useTheme()
+
+  const { data: popular, isLoading: popularLoading, isError: popularError } = useQuery({
+    queryKey: ['landing-popular-movies'],
+    queryFn: () => getPopularMovies(1),
+    enabled: TMDB_READY,
+    staleTime: 1000 * 60 * 30,
+  })
 
   return (
     <div className="min-h-screen">
@@ -59,6 +72,83 @@ export default function LandingPage() {
             </div>
           )}
         </div>
+      </section>
+
+      {/* Popular movies from TMDB (requires VITE_TMDB_API_KEY) */}
+      <section className="container mx-auto px-4 py-16">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+          <div>
+            <h2 className="text-3xl font-bold">Popular right now</h2>
+            <p className="text-muted-foreground mt-1">
+              Titles from The Movie Database — sign in to search and add any of them to your shelves.
+            </p>
+          </div>
+          <Link to="/signin">
+            <Button variant="outline">Sign in to explore</Button>
+          </Link>
+        </div>
+
+        {!TMDB_READY ? (
+          <Card className="border-dashed">
+            <CardContent className="py-8 text-center text-muted-foreground text-sm">
+              {import.meta.env.DEV ? (
+                <>
+                  Add <code className="text-xs bg-muted px-1 py-0.5 rounded">VITE_TMDB_API_KEY</code> to your{' '}
+                  <code className="text-xs bg-muted px-1 py-0.5 rounded">.env</code> (free key at{' '}
+                  <a
+                    href="https://www.themoviedb.org/settings/api"
+                    className="text-primary underline underline-offset-2"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    themoviedb.org
+                  </a>
+                  ), then restart the dev server. The same key powers Search in the app.
+                </>
+              ) : (
+                <>
+                  Sign in to search and add movies from a large catalog. (The site owner can add a TMDB API key so
+                  popular titles appear here.)
+                </>
+              )}
+            </CardContent>
+          </Card>
+        ) : popularLoading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="aspect-[2/3] rounded-lg bg-muted animate-pulse" />
+            ))}
+          </div>
+        ) : popularError || !popular?.results?.length ? (
+          <p className="text-sm text-muted-foreground text-center py-8">
+            Could not load popular titles. Check your TMDB key and try again later.
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {popular.results.slice(0, 12).map((movie) => (
+              <Link
+                key={movie.id}
+                to="/signin"
+                className="group block rounded-lg overflow-hidden border bg-card shadow-sm transition hover:ring-2 hover:ring-primary/30"
+              >
+                <div className="aspect-[2/3] bg-muted overflow-hidden">
+                  <img
+                    src={getPosterUrl(movie.poster_path, 'w342')}
+                    alt=""
+                    className="h-full w-full object-cover transition group-hover:scale-105"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-2">
+                  <p className="text-sm font-medium line-clamp-2 group-hover:text-primary">{movie.title}</p>
+                  {movie.release_date && (
+                    <p className="text-xs text-muted-foreground">{movie.release_date.slice(0, 4)}</p>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* How It Works */}
